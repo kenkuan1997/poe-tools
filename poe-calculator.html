@@ -129,10 +129,9 @@
         if (data.eva !== null) parts.push(`閃避值: ${data.eva}`);
         if (data.es !== null) parts.push(`能量護盾: ${data.es}`);
 
-        if (parts.length > 1) {
-          label = `${name} ~ ${parts.join(' / ')} (請到雙屬性計算器)`;
-        } else if (parts.length === 1) {
-          label = `${name} ~ ${parts[0]}`;
+        if (parts.length > 0) {
+          label = `${name} ~ ${parts.join(" / ")}`;
+          if (parts.length > 1) label += " (請到雙屬性計算器)";
         }
       } else {
         baseInput.classList.remove("highlighted");
