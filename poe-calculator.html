@@ -8,15 +8,11 @@
     h1 { font-size: 24px; }
     h2 { font-size: 20px; }
     label { display: block; margin-top: 10px; }
-    input[type="number"], input[type="text"] { width: 80px;  padding: 4px 6px;
-  font-size: 14px; }
+    input[type="number"], input[type="text"] { width: 80px; padding: 4px 6px; font-size: 14px; }
     nav { margin-bottom: 10px; }
     .container { display: flex; gap: 40px; flex-wrap: wrap; }
-    .calculator { flex: 1; min-width: 300px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 8px rgba(0, 0, 0, 0.1); }
-    button {
-  padding: 6px 12px;
-  font-size: 14px;
-}
+    .calculator { flex: 1; min-width: 300px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
+    button { padding: 6px 12px; font-size: 14px; }
     #result, #reverseResult, #recognitionStatus { font-weight: bold; font-size: 16px; margin-top: 20px; white-space: pre-line; }
     #recognitionStatus.success { color: green; }
     #recognitionStatus.fail { color: red; }
@@ -191,7 +187,7 @@
 
       let filled = 0;
 
-      const finalMatches = [...text.matchAll(/Energy Shield: (\\d{2,4})/gi)];
+      const finalMatches = [...text.matchAll(/Energy Shield: (\d{2,4})/gi)];
       if (finalMatches.length) {
         const finalES = finalMatches[0][1];
         document.getElementById('finalESInput').value = finalES;
@@ -199,44 +195,40 @@
         filled++;
       }
 
-      const flatMatch = /\\+(\\d+) to maximum Energy Shield/i.exec(text);
+      const flatMatch = /\+(\d+) to maximum Energy Shield/i.exec(text);
       if (flatMatch) {
         document.getElementById('flatES').value = flatMatch[1];
-        document.getElementById('flatES').classList.add('highlighted');
         document.getElementById('flatOnly').value = flatMatch[1];
-        document.getElementById('flatOnly').classList.add('highlighted');
+        ['flatES','flatOnly'].forEach(id => document.getElementById(id).classList.add('highlighted'));
         filled++;
       }
 
-      const increasedMatches = [...text.matchAll(/(\\d+)% increased Energy Shield/gi)].map(m => +m[1]);
-      const runeMatch = /(\\d+)% increased Armour, Evasion and Energy Shield/i.exec(text);
+      const increasedMatches = [...text.matchAll(/(\d+)% increased Energy Shield/gi)].map(m => +m[1]);
+      const runeMatch = /(\d+)% increased Armour, Evasion and Energy Shield/i.exec(text);
       const runeTotal = runeMatch ? +runeMatch[1] : 0;
       const runeVal = runeTotal / 2;
       const totalIncreased = increasedMatches.reduce((a, b) => a + b, 0);
 
       if (increasedMatches.length) {
         document.getElementById('increased').value = totalIncreased;
-        document.getElementById('increased').classList.add('highlighted');
         document.getElementById('increasedOnly').value = totalIncreased;
-        document.getElementById('increasedOnly').classList.add('highlighted');
+        ['increased','increasedOnly'].forEach(id => document.getElementById(id).classList.add('highlighted'));
         filled++;
       }
 
       if (runeMatch) {
-        document.getElementById('rune1').value = runeVal;
-        document.getElementById('rune2').value = runeVal;
-        document.getElementById('rune1Only').value = runeVal;
-        document.getElementById('rune2Only').value = runeVal;
-        ['rune1','rune2','rune1Only','rune2Only'].forEach(id => document.getElementById(id).classList.add('highlighted'));
+        ['rune1','rune2','rune1Only','rune2Only'].forEach(id => {
+          document.getElementById(id).value = runeVal;
+          document.getElementById(id).classList.add('highlighted');
+        });
         filled += 2;
       }
 
-      const qualityMatch = /Quality: \\+?(\\d{1,2})%/i.exec(text);
+      const qualityMatch = /Quality: \+?(\d{1,2})%/i.exec(text);
       if (qualityMatch) {
         document.getElementById('quality').value = qualityMatch[1];
-        document.getElementById('quality').classList.add('highlighted');
         document.getElementById('qualityOnly').value = qualityMatch[1];
-        document.getElementById('qualityOnly').classList.add('highlighted');
+        ['quality','qualityOnly'].forEach(id => document.getElementById(id).classList.add('highlighted'));
         filled++;
       }
 
