@@ -111,20 +111,33 @@
       const data = baseMap[name];
       let value = null;
       let label = "查無資料";
+
       if (data) {
         if (mode === "es") value = data.es;
         else if (mode === "eva") value = data.eva;
         else if (mode === "armour") value = data.armour;
+
         if (value !== null) {
           baseInput.value = value;
           baseInput.classList.add("highlighted");
-          label = `${name} ~ ${document.querySelector('.labelType').innerText}: ${value}`;
         } else {
           baseInput.classList.remove("highlighted");
+        }
+
+        const parts = [];
+        if (data.armour !== null) parts.push(`護甲值: ${data.armour}`);
+        if (data.eva !== null) parts.push(`閃避值: ${data.eva}`);
+        if (data.es !== null) parts.push(`能量護盾: ${data.es}`);
+
+        if (parts.length > 1) {
+          label = `${name} ~ ${parts.join(' / ')} (請到雙屬性計算器)`;
+        } else if (parts.length === 1) {
+          label = `${name} ~ ${parts[0]}`;
         }
       } else {
         baseInput.classList.remove("highlighted");
       }
+
       document.getElementById("baseDisplay").innerText = label;
     }
 
@@ -175,7 +188,7 @@
 
       let filled = 0;
 
-      const finalMatches = [...text.matchAll(/Energy Shield: (\d{2,4})/gi)];
+      const finalMatches = [...text.matchAll(/Energy Shield: (\\d{2,4})/gi)];
       if (finalMatches.length) {
         const finalES = finalMatches[0][1];
         document.getElementById('finalESInput').value = finalES;
@@ -183,7 +196,7 @@
         filled++;
       }
 
-      const flatMatch = /\+(\d+) to maximum Energy Shield/i.exec(text);
+      const flatMatch = /\\+(\\d+) to maximum Energy Shield/i.exec(text);
       if (flatMatch) {
         document.getElementById('flatES').value = flatMatch[1];
         document.getElementById('flatES').classList.add('highlighted');
@@ -192,8 +205,8 @@
         filled++;
       }
 
-      const increasedMatches = [...text.matchAll(/(\d+)% increased Energy Shield/gi)].map(m => +m[1]);
-      const runeMatch = /(\d+)% increased Armour, Evasion and Energy Shield/i.exec(text);
+      const increasedMatches = [...text.matchAll(/(\\d+)% increased Energy Shield/gi)].map(m => +m[1]);
+      const runeMatch = /(\\d+)% increased Armour, Evasion and Energy Shield/i.exec(text);
       const runeTotal = runeMatch ? +runeMatch[1] : 0;
       const runeVal = runeTotal / 2;
       const totalIncreased = increasedMatches.reduce((a, b) => a + b, 0);
@@ -215,7 +228,7 @@
         filled += 2;
       }
 
-      const qualityMatch = /Quality: \+?(\d{1,2})%/i.exec(text);
+      const qualityMatch = /Quality: \\+?(\\d{1,2})%/i.exec(text);
       if (qualityMatch) {
         document.getElementById('quality').value = qualityMatch[1];
         document.getElementById('quality').classList.add('highlighted');
