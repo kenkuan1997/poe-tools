@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>PoE 雙屬性計算器</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+    }
+    h1 { font-size: 24px; }
+    h2, h3 { font-size: 20px; }
+    label { display: block; margin-top: 10px; }
+    input[type="number"] { width: 80px; }
+    #result, #reverseResult {
+      font-weight: bold;
+      font-size: 18px;
+      margin-top: 20px;
+      white-space: pre-line;
+    }
+    nav {
+      margin-bottom: 10px;
+    }
+    .container {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+    .calculator {
+      flex: 1;
+      min-width: 300px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    }
+    button {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">主頁</a> |
+    <a href="poe-calculator.html">POE 單屬性計算器</a> |
+    <a href="poe-calculator2.html">POE 雙屬性計算器</a>
+  </nav>
+  <hr>
+  <h1><strong>POE 雙屬性計算器</strong></h1>
+
+  <label>
+    選擇顯示屬性：
+    <select id="modeSelector" onchange="updateLabels()">
+      <option value="EV_ES">閃避值 / 能量護盾</option>
+      <option value="AR_EV">護甲值 / 閃避值</option>
+      <option value="AR_ES">護甲值 / 能量護盾</option>
+    </select>
+  </label>
+
+  <div class="container">
+    <div class="calculator">
+      <h2>計算數值</h2>
+      <label><span id="labelBase1">基底 閃避值</span> : <input type="number" id="baseEV" value="159"></label>
+      <label><span id="labelFlat1">+ 閃避值</span> : <input type="number" id="flatEV" value="21"></label>
+
+      <label><span id="labelBase2">基底 能量護盾</span> : <input type="number" id="baseES" value="62"></label>
+      <label><span id="labelFlat2">+ 能量護盾</span> : <input type="number" id="flatES" value="12"></label>
+
+      <label>% <span id="labelBoth">能量護盾 / 閃避值</span> 增加 : <input type="number" id="increased" value="34"></label>
+      <label>符文 1 % : <input type="number" id="rune1" value="15"></label>
+      <label>符文 2 % : <input type="number" id="rune2" value="15"></label>
+      <label>品質 (0–20) : <input type="number" id="quality" value="0" min="0" max="20"></label>
+
+      <button onclick="calculateStats()">計算</button>
+      <div id="result"></div>
+    </div>
+
+    <div class="calculator">
+      <h2>反推未使用符文數值</h2>
+      <label>遊戲內看到的 <span id="labelSeen1">閃避值</span> : <input type="number" id="finalEVInput" value="295"></label>
+      <label>+ <span id="labelSeen1Add">閃避值</span> : <input type="number" id="flatEVOnly" value="21"></label>
+
+      <label>遊戲內看到的 <span id="labelSeen2">能量護盾</span> : <input type="number" id="finalESInput" value="121"></label>
+      <label>+ <span id="labelSeen2Add">能量護盾</span> : <input type="number" id="flatESOnly" value="12"></label>
+
+      <label>% <span id="labelBoth2">能量護盾 / 閃避</span> 增加 : <input type="number" id="increasedOnly" value="34"></label>
+      <label>符文 1 % : <input type="number" id="rune1Only" value="15"></label>
+      <label>符文 2 % : <input type="number" id="rune2Only" value="15"></label>
+      <label>品質 (0–20) : <input type="number" id="qualityOnly" value="0"></label>
+
+      <button onclick="reverseWithoutRunes()">反推數值</button>
+      <div id="reverseResult"></div>
+    </div>
+  </div>
+
+  <hr>
+  <script>
+    let label1 = "閃避值";
+    let label2 = "能量護盾";
+
+    function updateLabels() {
+      const mode = document.getElementById("modeSelector").value;
+      if (mode === "EV_ES") {
+        label1 = "閃避值";
+        label2 = "能量護盾";
+      } else if (mode === "AR_EV") {
+        label1 = "護甲值";
+        label2 = "閃避值";
+      } else {
+        label1 = "護甲值";
+        label2 = "能量護盾";
+      }
+
+      document.getElementById("labelBase1").innerText = `基底 ${label1}`;
+      document.getElementById("labelFlat1").innerText = `+ ${label1}`;
+      document.getElementById("labelBase2").innerText = `基底 ${label2}`;
+      document.getElementById("labelFlat2").innerText = `+ ${label2}`;
+
+      document.getElementById("labelBoth").innerText = `${label2} / ${label1}`;
+      document.getElementById("labelBoth2").innerText = `${label2} / ${label1}`;
+
+      document.getElementById("labelSeen1").innerText = label1;
+      document.getElementById("labelSeen1Add").innerText = label1;
+      document.getElementById("labelSeen2").innerText = label2;
+      document.getElementById("labelSeen2Add").innerText = label2;
+
+      calculateStats();
+      reverseWithoutRunes();
+    }
+
+    function calculateStat(base, flat, inc, rune1, rune2, quality, withRunes) {
+      const totalInc = inc + (withRunes ? (rune1 + rune2) : 0);
+      const multiplier = (1 + totalInc / 100) * (1 + quality / 100);
+      return Math.round((base + flat) * multiplier);
+    }
+
+    function calculateStats() {
+      const baseES = parseFloat(document.getElementById("baseES").value) || 0;
+      const flatES = parseFloat(document.getElementById("flatES").value) || 0;
+      const baseEV = parseFloat(document.getElementById("baseEV").value) || 0;
+      const flatEV = parseFloat(document.getElementById("flatEV").value) || 0;
+
+      const increased = parseFloat(document.getElementById("increased").value) || 0;
+      const rune1 = parseFloat(document.getElementById("rune1").value) || 0;
+      const rune2 = parseFloat(document.getElementById("rune2").value) || 0;
+      const quality = parseFloat(document.getElementById("quality").value) || 0;
+
+      const val1With = calculateStat(baseEV, flatEV, increased, rune1, rune2, quality, true);
+      const val1Without = calculateStat(baseEV, flatEV, increased, rune1, rune2, quality, false);
+
+      const val2With = calculateStat(baseES, flatES, increased, rune1, rune2, quality, true);
+      const val2Without = calculateStat(baseES, flatES, increased, rune1, rune2, quality, false);
+
+      document.getElementById("result").innerText =
+        `使用符文的${label1}：${val1With}\n使用符文的${label2}：${val2With}\n\n` +
+        `未使用符文的${label1}：${val1Without}\n未使用符文的${label2}：${val2Without}`;
+    }
+
+    function reverseWithoutRunes() {
+      const finalES = parseFloat(document.getElementById("finalESInput").value) || 0;
+      const flatES = parseFloat(document.getElementById("flatESOnly").value) || 0;
+      const finalEV = parseFloat(document.getElementById("finalEVInput").value) || 0;
+      const flatEV = parseFloat(document.getElementById("flatEVOnly").value) || 0;
+
+      const inc = parseFloat(document.getElementById("increasedOnly").value) || 0;
+      const rune1 = parseFloat(document.getElementById("rune1Only").value) || 0;
+      const rune2 = parseFloat(document.getElementById("rune2Only").value) || 0;
+      const quality = parseFloat(document.getElementById("qualityOnly").value) || 0;
+
+      const totalIncWithRunes = inc + rune1 + rune2;
+      const multiplierWithRunes = (1 + totalIncWithRunes / 100) * (1 + quality / 100);
+      const multiplierWithoutRunes = (1 + inc / 100) * (1 + quality / 100);
+
+      const basePlusFlatES = finalES / multiplierWithRunes;
+      const basePlusFlatEV = finalEV / multiplierWithRunes;
+
+      const baseES = basePlusFlatES - flatES;
+      const baseEV = basePlusFlatEV - flatEV;
+
+      const estES = Math.round(basePlusFlatES * multiplierWithoutRunes);
+      const estEV = Math.round(basePlusFlatEV * multiplierWithoutRunes);
+
+      document.getElementById("reverseResult").innerText =
+        `未使用符文的${label1}（反推）：${estEV}\n` +
+        `未使用符文的${label2}（反推）：${estES}\n\n` +
+        `推估基底${label1}：${Math.round(baseEV)}\n` +
+        `推估基底${label2}：${Math.round(baseES)}`;
+    }
+
+    window.onload = updateLabels;
+  </script>
+</body>
+</html>

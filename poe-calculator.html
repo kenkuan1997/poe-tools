@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>PoE 能量護盾計算器</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; }
+    h1 { font-size: 24px; }
+    h2 { font-size: 20px; }
+    label { display: block; margin-top: 10px; }
+    input[type="number"], input[type="text"] { width: 200px; }
+    nav { margin-bottom: 10px; }
+    .container { display: flex; gap: 40px; flex-wrap: wrap; }
+    .calculator { flex: 1; min-width: 300px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 8px rgba(0, 0, 0, 0.1); }
+    button { margin-top: 15px; }
+    #result, #reverseResult, #recognitionStatus { font-weight: bold; font-size: 16px; margin-top: 20px; white-space: pre-line; }
+    #recognitionStatus.success { color: green; }
+    #recognitionStatus.fail { color: red; }
+    .highlighted { border: 2px solid #00c853 !important; background-color: #e8f5e9; }
+    .baseRow { display: flex; align-items: center; gap: 10px; margin-top: 10px; margin-bottom: 10px; }
+    #baseDisplay { font-weight: bold; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">主頁</a> |
+    <a href="poe-calculator.html">POE 單屬性計算器</a> |
+    <a href="poe-calculator2.html">POE 雙屬性計算器</a>
+  </nav>
+  <hr>
+  <h1><strong>POE <span id="labelTitle">能量護盾</span>計算器</strong></h1>
+
+  <label style="font-weight: bold;">
+    屬性模式：
+    <select id="modeSelect" onchange="updateLabelsByMode()">
+      <option value="es" selected>能量護盾</option>
+      <option value="eva">閃避值</option>
+      <option value="armour">護甲值</option>
+    </select>
+  </label>
+
+  <label>上傳圖片辨識數值：
+    <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
+  </label>
+  <div id="recognitionStatus"></div>
+
+  <div class="baseRow">
+    <label>基底名稱（預設 Vile Robe）：
+      <input type="text" id="baseName" value="Vile Robe" oninput="updateBaseFromName()">
+    </label>
+    <div id="baseDisplay">Vile Robe ~ Energy Shield: 184</div>
+  </div>
+
+  <div class="container">
+    <div class="calculator">
+      <h2>計算數值</h2>
+      <label>基底 <span class="labelType">能量護盾</span> : <input type="number" id="baseES" value="184"></label>
+      <label>+ <span class="labelType">能量護盾</span> : <input type="number" id="flatES" value="93"></label>
+      <label>% <span class="labelType">能量護盾</span> : <input type="number" id="increased" value="94"></label>
+      <label>符文 1 % : <input type="number" id="rune1" value="25"></label>
+      <label>符文 2 % : <input type="number" id="rune2" value="25"></label>
+      <label>品質(0–20) : <input type="number" id="quality" value="0"></label>
+      <button onclick="calculateES()">計算</button>
+      <div id="result"></div>
+    </div>
+
+    <div class="calculator">
+      <h2>反推未使用符文的數值</h2>
+      <label>遊戲內看到的<span class="labelType">能量護盾</span> : <input type="number" id="finalESInput" value="676"></label>
+      <label>+ <span class="labelType">能量護盾</span> : <input type="number" id="flatOnly" value="93"></label>
+      <label>% <span class="labelType">能量護盾</span> : <input type="number" id="increasedOnly" value="94"></label>
+      <label>符文 1 % : <input type="number" id="rune1Only" value="25"></label>
+      <label>符文 2 % : <input type="number" id="rune2Only" value="25"></label>
+      <label>品質 (0–20) : <input type="number" id="qualityOnly" value="0"></label>
+      <button onclick="reverseWithoutRunes()">反推</button>
+      <div id="reverseResult"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+  <script>
+    let baseMap = {};
+
+    fetch('All_BodyArmours.json')
+      .then(res => res.json())
+      .then(data => {
+        data.forEach(item => {
+          if (item["Energy Shield"] !== undefined && item["BaseType"]) {
+            baseMap[item["BaseType"]] = item["Energy Shield"];
+          }
+        });
+        updateBaseFromName();
+      })
+      .catch(err => console.error("載入 baseMap 失敗：", err));
+
+    function updateLabelsByMode() {
+      const mode = document.getElementById("modeSelect").value;
+      let text = "能量護盾";
+      if (mode === "eva") text = "閃避值";
+      else if (mode === "armour") text = "護甲值";
+      document.querySelectorAll('.labelType').forEach(el => el.innerText = text);
+      document.getElementById("labelTitle").innerText = text;
+    }
+
+    function updateBaseFromName() {
+      const name = document.getElementById("baseName").value.trim();
+      const es = baseMap[name];
+      const baseInput = document.getElementById("baseES");
+      if (es !== undefined) {
+        baseInput.value = es;
+        baseInput.classList.add("highlighted");
+        document.getElementById("baseDisplay").innerText = `${name} ~ Energy Shield: ${es}`;
+      } else {
+        document.getElementById("baseDisplay").innerText = `${name} ~ 查無資料`;
+        baseInput.classList.remove("highlighted");
+      }
+    }
+
+    function calculateES() {
+      const base = +document.getElementById('baseES').value;
+      const flat = +document.getElementById('flatES').value;
+      const inc = +document.getElementById('increased').value;
+      const rune1 = +document.getElementById('rune1').value;
+      const rune2 = +document.getElementById('rune2').value;
+      const quality = +document.getElementById('quality').value;
+      const totalBase = base + flat;
+      const esWith = Math.round(totalBase * (1 + (inc + rune1 + rune2) / 100) * (1 + quality / 100));
+      const esWithout = Math.round(totalBase * (1 + inc / 100) * (1 + quality / 100));
+      const label = document.querySelector('.labelType')?.innerText || '能量護盾';
+      document.getElementById('result').innerText =
+        `使用符文的${label}：${esWith}\n\n未使用符文的${label}：${esWithout}`;
+    }
+
+    function reverseWithoutRunes() {
+      const final = +document.getElementById('finalESInput').value;
+      const flat = +document.getElementById('flatOnly').value;
+      const inc = +document.getElementById('increasedOnly').value;
+      const rune1 = +document.getElementById('rune1Only').value;
+      const rune2 = +document.getElementById('rune2Only').value;
+      const quality = +document.getElementById('qualityOnly').value;
+      const baseFlat = final / ((1 + (inc + rune1 + rune2) / 100) * (1 + quality / 100));
+      const base = baseFlat - flat;
+      const est = Math.round(baseFlat * (1 + inc / 100) * (1 + quality / 100));
+      const label = document.querySelector('.labelType')?.innerText || '能量護盾';
+      document.getElementById('reverseResult').innerText =
+        `未使用符文的${label}（反推）為：${est}\n\n推估基底${label}：${Math.round(base)}`;
+    }
+
+    async function handleImageUpload(event) {
+      document.querySelectorAll('.highlighted').forEach(el => el.classList.remove('highlighted'));
+      const status = document.getElementById('recognitionStatus');
+      status.innerText = '';
+      status.className = '';
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const { createWorker } = Tesseract;
+      const worker = await createWorker({ logger: m => console.log(m) });
+      await worker.loadLanguage('eng');
+      await worker.initialize('eng');
+      const { data: { text } } = await worker.recognize(file);
+      await worker.terminate();
+
+      let filled = 0;
+
+      const finalMatches = [...text.matchAll(/Energy Shield: (\d{2,4})/gi)];
+      if (finalMatches.length) {
+        const finalES = finalMatches[0][1];
+        document.getElementById('finalESInput').value = finalES;
+        document.getElementById('finalESInput').classList.add('highlighted');
+        filled++;
+      }
+
+      const flatMatch = /\+(\d+) to maximum Energy Shield/i.exec(text);
+      if (flatMatch) {
+        document.getElementById('flatES').value = flatMatch[1];
+        document.getElementById('flatES').classList.add('highlighted');
+        document.getElementById('flatOnly').value = flatMatch[1];
+        document.getElementById('flatOnly').classList.add('highlighted');
+        filled++;
+      }
+
+      const increasedMatches = [...text.matchAll(/(\d+)% increased Energy Shield/gi)].map(m => +m[1]);
+      const runeMatch = /(\d+)% increased Armour, Evasion and Energy Shield/i.exec(text);
+      const runeTotal = runeMatch ? +runeMatch[1] : 0;
+      const runeVal = runeTotal / 2;
+      const totalIncreased = increasedMatches.reduce((a, b) => a + b, 0);
+
+      if (increasedMatches.length) {
+        document.getElementById('increased').value = totalIncreased;
+        document.getElementById('increased').classList.add('highlighted');
+        document.getElementById('increasedOnly').value = totalIncreased;
+        document.getElementById('increasedOnly').classList.add('highlighted');
+        filled++;
+      }
+
+      if (runeMatch) {
+        document.getElementById('rune1').value = runeVal;
+        document.getElementById('rune2').value = runeVal;
+        document.getElementById('rune1Only').value = runeVal;
+        document.getElementById('rune2Only').value = runeVal;
+        ['rune1','rune2','rune1Only','rune2Only'].forEach(id => document.getElementById(id).classList.add('highlighted'));
+        filled += 2;
+      }
+
+      const qualityMatch = /Quality: \+?(\d{1,2})%/i.exec(text);
+      if (qualityMatch) {
+        document.getElementById('quality').value = qualityMatch[1];
+        document.getElementById('quality').classList.add('highlighted');
+        document.getElementById('qualityOnly').value = qualityMatch[1];
+        document.getElementById('qualityOnly').classList.add('highlighted');
+        filled++;
+      }
+
+      status.className = filled > 0 ? 'success' : 'fail';
+      status.innerText = filled > 0 ? `成功填入欄位：${filled}` : '未成功填入欄位';
+    }
+  </script>
+</body>
+</html>
