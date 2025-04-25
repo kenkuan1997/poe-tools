@@ -32,7 +32,7 @@
 
   <label style="font-weight: bold;">
     屬性模式：
-    <select id="modeSelect" onchange="updateLabelsByMode()">
+    <select id="modeSelect" onchange="updateLabelsByMode(); updateBaseFromName();">
       <option value="es" selected>能量護盾</option>
       <option value="eva">閃避值</option>
       <option value="armour">護甲值</option>
@@ -48,7 +48,7 @@
     <label>基底名稱（預設 Vile Robe）：
       <input type="text" id="baseName" value="Vile Robe" oninput="updateBaseFromName()">
     </label>
-    <div id="baseDisplay">Vile Robe ~ Energy Shield: 184</div>
+    <div id="baseDisplay">Vile Robe ~ 能量護盾: 184</div>
   </div>
 
   <div class="container">
@@ -85,9 +85,11 @@
       .then(res => res.json())
       .then(data => {
         data.forEach(item => {
-          if (item["Energy Shield"] !== undefined && item["BaseType"]) {
-            baseMap[item["BaseType"]] = item["Energy Shield"];
-          }
+          baseMap[item["BaseType"]] = {
+            es: item["Energy Shield"] ?? null,
+            eva: item["Evasion Rating"] ?? null,
+            armour: item["Armour"] ?? null
+          };
         });
         updateBaseFromName();
       })
@@ -104,16 +106,26 @@
 
     function updateBaseFromName() {
       const name = document.getElementById("baseName").value.trim();
-      const es = baseMap[name];
+      const mode = document.getElementById("modeSelect").value;
       const baseInput = document.getElementById("baseES");
-      if (es !== undefined) {
-        baseInput.value = es;
-        baseInput.classList.add("highlighted");
-        document.getElementById("baseDisplay").innerText = `${name} ~ Energy Shield: ${es}`;
+      const data = baseMap[name];
+      let value = null;
+      let label = "查無資料";
+      if (data) {
+        if (mode === "es") value = data.es;
+        else if (mode === "eva") value = data.eva;
+        else if (mode === "armour") value = data.armour;
+        if (value !== null) {
+          baseInput.value = value;
+          baseInput.classList.add("highlighted");
+          label = `${name} ~ ${document.querySelector('.labelType').innerText}: ${value}`;
+        } else {
+          baseInput.classList.remove("highlighted");
+        }
       } else {
-        document.getElementById("baseDisplay").innerText = `${name} ~ 查無資料`;
         baseInput.classList.remove("highlighted");
       }
+      document.getElementById("baseDisplay").innerText = label;
     }
 
     function calculateES() {
