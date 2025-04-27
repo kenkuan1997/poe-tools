@@ -2,42 +2,23 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>PoE 雙屬性計算器</title>
+  <title>PoE 雙屬計算器</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f9f9f9;
-      padding: 20px;
-    }
+    body { font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; }
     h1 { font-size: 24px; }
-    h2, h3 { font-size: 20px; }
+    h2 { font-size: 20px; }
     label { display: block; margin-top: 10px; }
-    input[type="number"] { width: 80px; }
-    #result, #reverseResult {
-      font-weight: bold;
-      font-size: 18px;
-      margin-top: 20px;
-      white-space: pre-line;
-    }
-    nav {
-      margin-bottom: 10px;
-    }
-    .container {
-      display: flex;
-      gap: 40px;
-      flex-wrap: wrap;
-    }
-    .calculator {
-      flex: 1;
-      min-width: 300px;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-    }
-    button {
-      margin-top: 15px;
-    }
+    input[type="number"], input[type="text"] { width: 80px; padding: 4px 6px; font-size: 14px; }
+    nav { margin-bottom: 10px; }
+    .container { display: flex; gap: 40px; flex-wrap: wrap; }
+    .calculator { flex: 1; min-width: 300px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
+    button { padding: 6px 12px; font-size: 14px; }
+    #result, #reverseResult, #recognitionStatus { font-weight: bold; font-size: 16px; margin-top: 20px; white-space: pre-line; }
+    #recognitionStatus.success { color: green; }
+    #recognitionStatus.fail { color: red; }
+    .highlighted { border: 2px solid #00c853 !important; background-color: #e8f5e9; }
+    .baseRow { display: flex; align-items: center; gap: 10px; margin-top: 10px; margin-bottom: 10px; }
+    #baseDisplay { font-weight: bold; white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -47,46 +28,65 @@
     <a href="poe-calculator2.html">POE 雙屬性計算器</a>
   </nav>
   <hr>
-  <h1><strong>POE 雙屬性計算器</strong></h1>
-
-  <label>
-    選擇顯示屬性：
-    <select id="modeSelector" onchange="updateLabels()">
+  <h1><strong>POE 雙屬計算器</strong></h1>
+  <label style="font-weight: bold;">
+    屬性模式：
+    <select id="modeSelect" onchange="updateLabelsByMode(); updateBaseFromName();">
       <option value="EV_ES">閃避值 / 能量護盾</option>
       <option value="AR_EV">護甲值 / 閃避值</option>
       <option value="AR_ES">護甲值 / 能量護盾</option>
     </select>
   </label>
+  <label>上傳圖片辨識數值：
+    <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
+  </label>
+  <div id="recognitionStatus"></div>
+
+<div>
+  <label><input type="checkbox" id="toggleOCRText" onchange="toggleOCRDisplay()"> 顯示OCR辨識文字</label>
+</div>
+<div id="ocrTextDisplay" style="display:none; margin-top:10px;">
+  <textarea id="ocrTextArea" rows="10" cols="50" readonly style="width:100%;"></textarea>
+</div>
+
+  <div class="baseRow">
+    <label>基底名稱（預設 Sleek Jacket）：
+      <input type="text" id="baseName" value="Sleek Jacket" oninput="updateBaseFromName()">
+    </label>
+    <div id="baseDisplay">Sleek Jacket ~ 閃避值: 268 / 能量護盾: 101</div>
+  </div>
 
   <div class="container">
+    <!-- 計算區 -->
     <div class="calculator">
       <h2>計算數值</h2>
-      <label><span id="labelBase1">基底 閃避值</span> : <input type="number" id="baseEV" value="159"></label>
-      <label><span id="labelFlat1">+ 閃避值</span> : <input type="number" id="flatEV" value="21"></label>
+      <label>基底 <span id="labelBase1">閃避值</span> : <input type="number" id="base1" value="268"></label>
+      <label>+ <span id="labelFlat1">閃避值</span> : <input type="number" id="flat1" value="67"></label>
 
-      <label><span id="labelBase2">基底 能量護盾</span> : <input type="number" id="baseES" value="62"></label>
-      <label><span id="labelFlat2">+ 能量護盾</span> : <input type="number" id="flatES" value="12"></label>
+      <label>基底 <span id="labelBase2">能量護盾</span> : <input type="number" id="base2" value="101"></label>
+      <label>+ <span id="labelFlat2">能量護盾</span> : <input type="number" id="flat2" value="27"></label>
 
-      <label>% <span id="labelBoth">能量護盾 / 閃避值</span> 增加 : <input type="number" id="increased" value="34"></label>
-      <label>符文 1 % : <input type="number" id="rune1" value="15"></label>
-      <label>符文 2 % : <input type="number" id="rune2" value="15"></label>
+      <label>% <span id="labelBoth">能量護盾 / 閃避值</span> 增加 : <input type="number" id="increased" value="115"></label>
+      <label>符文 1 % : <input type="number" id="rune1" value="25"></label>
+      <label>符文 2 % : <input type="number" id="rune2" value="25"></label>
       <label>品質 (0–20) : <input type="number" id="quality" value="0" min="0" max="20"></label>
 
-      <button onclick="calculateStats()">計算</button>
+      <button onclick="calculateES()">計算</button>
       <div id="result"></div>
     </div>
 
+    <!-- 反推區 -->
     <div class="calculator">
       <h2>反推未使用符文數值</h2>
-      <label>遊戲內看到的 <span id="labelSeen1">閃避值</span> : <input type="number" id="finalEVInput" value="295"></label>
-      <label>+ <span id="labelSeen1Add">閃避值</span> : <input type="number" id="flatEVOnly" value="21"></label>
+      <label>遊戲內看到的 <span id="labelSeen1">閃避值</span> : <input type="number" id="final1Input" value="888"></label>
+      <label>+ <span id="labelSeen1Add">閃避值</span> : <input type="number" id="flat1Only" value="67"></label>
 
-      <label>遊戲內看到的 <span id="labelSeen2">能量護盾</span> : <input type="number" id="finalESInput" value="121"></label>
-      <label>+ <span id="labelSeen2Add">能量護盾</span> : <input type="number" id="flatESOnly" value="12"></label>
+      <label>遊戲內看到的 <span id="labelSeen2">能量護盾</span> : <input type="number" id="final2Input" value="339"></label>
+      <label>+ <span id="labelSeen2Add">能量護盾</span> : <input type="number" id="flat2Only" value="27"></label>
 
-      <label>% <span id="labelBoth2">能量護盾 / 閃避</span> 增加 : <input type="number" id="increasedOnly" value="34"></label>
-      <label>符文 1 % : <input type="number" id="rune1Only" value="15"></label>
-      <label>符文 2 % : <input type="number" id="rune2Only" value="15"></label>
+      <label>% <span id="labelBoth2">能量護盾 / 閃避</span> 增加 : <input type="number" id="increasedOnly" value="115"></label>
+      <label>符文 1 % : <input type="number" id="rune1Only" value="25"></label>
+      <label>符文 2 % : <input type="number" id="rune2Only" value="25"></label>
       <label>品質 (0–20) : <input type="number" id="qualityOnly" value="0"></label>
 
       <button onclick="reverseWithoutRunes()">反推數值</button>
@@ -94,101 +94,289 @@
     </div>
   </div>
 
-  <hr>
-  <script>
-    let label1 = "閃避值";
-    let label2 = "能量護盾";
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
 
-    function updateLabels() {
-      const mode = document.getElementById("modeSelector").value;
+  <script>
+  let baseMap = {};
+
+  fetch('All_BodyArmours.json')
+    .then(res => res.json())
+    .then(data => {
+      data.forEach(item => {
+        baseMap[item["BaseType"]] = {
+          es: item["Energy Shield"] ?? null,
+          eva: item["Evasion Rating"] ?? null,
+          armour: item["Armour"] ?? null
+        };
+      });
+      updateBaseFromName();
+    })
+    .catch(err => console.error("載入 baseMap 失敗：", err));
+
+  function updateBaseFromName() {
+    const nameInput = document.getElementById("baseName").value.trim();
+    const nameLower = nameInput.toLowerCase();
+    const mode = document.getElementById("modeSelect").value;
+    const base1Input = document.getElementById("base1");
+    const base2Input = document.getElementById("base2");
+    const baseDisplay = document.getElementById("baseDisplay");
+    let foundKey = null;
+
+    for (const key in baseMap) {
+      if (key.toLowerCase() === nameLower) {
+        foundKey = key;
+        break;
+      }
+    }
+
+    let label = "查無資料";
+    if (foundKey) {
+      const data = baseMap[foundKey];
+      let value1 = null, value2 = null;
       if (mode === "EV_ES") {
-        label1 = "閃避值";
-        label2 = "能量護盾";
+        value1 = data.eva; value2 = data.es;
       } else if (mode === "AR_EV") {
-        label1 = "護甲值";
-        label2 = "閃避值";
+        value1 = data.armour; value2 = data.eva;
+      } else if (mode === "AR_ES") {
+        value1 = data.armour; value2 = data.es;
+      }
+      if (value1 !== null) {
+        base1Input.value = value1;
+        base1Input.classList.add("highlighted");
       } else {
-        label1 = "護甲值";
-        label2 = "能量護盾";
+        base1Input.classList.remove("highlighted");
+      }
+      if (value2 !== null) {
+        base2Input.value = value2;
+        base2Input.classList.add("highlighted");
+      } else {
+        base2Input.classList.remove("highlighted");
       }
 
-      document.getElementById("labelBase1").innerText = `基底 ${label1}`;
-      document.getElementById("labelFlat1").innerText = `+ ${label1}`;
-      document.getElementById("labelBase2").innerText = `基底 ${label2}`;
-      document.getElementById("labelFlat2").innerText = `+ ${label2}`;
+      const parts = [];
+      if (data.armour !== null) parts.push(`護甲值: ${data.armour}`);
+      if (data.eva !== null)    parts.push(`閃避值: ${data.eva}`);
+      if (data.es !== null)     parts.push(`能量護盾: ${data.es}`);
 
-      document.getElementById("labelBoth").innerText = `${label2} / ${label1}`;
-      document.getElementById("labelBoth2").innerText = `${label2} / ${label1}`;
-
-      document.getElementById("labelSeen1").innerText = label1;
-      document.getElementById("labelSeen1Add").innerText = label1;
-      document.getElementById("labelSeen2").innerText = label2;
-      document.getElementById("labelSeen2Add").innerText = label2;
-
-      calculateStats();
-      reverseWithoutRunes();
+      if (parts.length > 0) {
+        label = `${foundKey} ~ ${parts.join(" / ")}`;
+        if (parts.length == 1) label += " (請到單屬性計算器)";
+      }
+    } else {
+      base1Input.classList.remove("highlighted");
+      base2Input.classList.remove("highlighted");
     }
 
-    function calculateStat(base, flat, inc, rune1, rune2, quality, withRunes) {
-      const totalInc = inc + (withRunes ? (rune1 + rune2) : 0);
-      const multiplier = (1 + totalInc / 100) * (1 + quality / 100);
-      return Math.round((base + flat) * multiplier);
+    baseDisplay.innerText = label;
+  }
+
+  function calculateES() {
+    const base1 = parseFloat(document.getElementById('base1').value) || 0;
+    const flat1 = parseFloat(document.getElementById('flat1').value) || 0;
+    const base2 = parseFloat(document.getElementById('base2').value) || 0;
+    const flat2 = parseFloat(document.getElementById('flat2').value) || 0;
+    const increased = parseFloat(document.getElementById('increased').value) || 0;
+    const rune1 = parseFloat(document.getElementById('rune1').value) || 0;
+    const rune2 = parseFloat(document.getElementById('rune2').value) || 0;
+    const quality = parseFloat(document.getElementById('quality').value) || 0;
+
+    const total1 = base1 + flat1;
+    const total2 = base2 + flat2;
+    const withMultiplier = 1 + (increased + rune1 + rune2) / 100;
+    const withoutMultiplier = 1 + increased / 100;
+    const factor = 1 + quality / 100;
+    const attr1_with = Math.round(total1 * withMultiplier * factor);
+    const attr2_with = Math.round(total2 * withMultiplier * factor);
+    const attr1_without = Math.round(total1 * withoutMultiplier * factor);
+    const attr2_without = Math.round(total2 * withoutMultiplier * factor);
+
+    const label1 = document.getElementById('labelBase1').innerText.replace('基底 ', '');
+    const label2 = document.getElementById('labelBase2').innerText.replace('基底 ', '');
+    document.getElementById('result').innerText =
+      `使用符文的 ${label1}：${attr1_with}\n使用符文的 ${label2}：${attr2_with}\n\n` +
+      `未使用符文的 ${label1}：${attr1_without}\n未使用符文的 ${label2}：${attr2_without}`;
+  }
+
+  function reverseWithoutRunes() {
+    const final1Input = parseFloat(document.getElementById('final1Input').value) || 0;
+    const flat1Only   = parseFloat(document.getElementById('flat1Only').value)   || 0;
+    const final2Input = parseFloat(document.getElementById('final2Input').value) || 0;
+    const flat2Only   = parseFloat(document.getElementById('flat2Only').value)   || 0;
+    const increasedOnly = parseFloat(document.getElementById('increasedOnly').value) || 0;
+    const rune1Only = parseFloat(document.getElementById('rune1Only').value) || 0;
+    const rune2Only = parseFloat(document.getElementById('rune2Only').value) || 0;
+    const qualityOnly = parseFloat(document.getElementById('qualityOnly').value) || 0;
+
+    const incMult = 1 + (increasedOnly + rune1Only + rune2Only) / 100;
+    const factor = 1 + qualityOnly / 100;
+    const baseFlat1 = final1Input / (incMult * factor);
+    const baseFlat2 = final2Input / (incMult * factor);
+    const base1 = baseFlat1 - flat1Only;
+    const base2 = baseFlat2 - flat2Only;
+    const withoutMult = 1 + increasedOnly / 100;
+    const est1 = Math.round(baseFlat1 * withoutMult * factor);
+    const est2 = Math.round(baseFlat2 * withoutMult * factor);
+
+    const label1 = document.getElementById('labelSeen1').innerText;
+    const label2 = document.getElementById('labelSeen2').innerText;
+    document.getElementById('reverseResult').innerText =
+      `未使用符文的 ${label1}（反推）為：${est1}\n未使用符文的 ${label2}（反推）為：${est2}\n\n` +
+      `推估基底 ${label1}：${Math.round(base1)}\n推估基底 ${label2}：${Math.round(base2)}`;
+  }
+
+  function updateLabelsByMode() {
+    const mode = document.getElementById('modeSelect').value;
+    let label1 = '', label2 = '', both = '';
+    if (mode === 'EV_ES') {
+      label1 = '閃避值'; label2 = '能量護盾'; both = '能量護盾 / 閃避值';
+    } else if (mode === 'AR_EV') {
+      label1 = '護甲值'; label2 = '閃避值'; both = '護甲值 / 閃避值';
+    } else if (mode === 'AR_ES') {
+      label1 = '護甲值'; label2 = '能量護盾'; both = '能量護盾 / 護甲值';
+    }
+    document.getElementById('labelBase1').innerText = `基底 ${label1}`;
+    document.getElementById('labelFlat1').innerText = `+ ${label1}`;
+    document.getElementById('labelBase2').innerText = `基底 ${label2}`;
+    document.getElementById('labelFlat2').innerText = `+ ${label2}`;
+    document.getElementById('labelBoth').innerText = both;
+    document.getElementById('labelSeen1').innerText = label1;
+    document.getElementById('labelSeen1Add').innerText = label1;
+    document.getElementById('labelSeen2').innerText = label2;
+    document.getElementById('labelSeen2Add').innerText = label2;
+    document.getElementById('labelBoth2').innerText = both.replace('值','');
+  }
+
+  async function handleImageUpload(event) {
+    document.querySelectorAll('.highlighted').forEach(el => el.classList.remove('highlighted'));
+    const status = document.getElementById('recognitionStatus');
+    status.innerText = '';
+    status.className = '';
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const { createWorker } = Tesseract;
+    const worker = await createWorker({ logger: m => console.log(m) });
+    await worker.loadLanguage('eng');
+    await worker.initialize('eng');
+    const { data: { text } } = await worker.recognize(file);
+    await worker.terminate();
+
+    console.log(text);  // 輸出OCR結果
+    document.getElementById('ocrTextArea').value = text;
+
+    let filled = 0;
+    const mode = document.getElementById('modeSelect').value;
+   
+
+    // 偵測數值
+    const finalAR = text.match(/Armour: (\d{1,4})/i);
+    if (finalAR && (mode === 'AR_EV' || mode === 'AR_ES')) {
+      document.getElementById('final1Input').value = finalAR[1];
+      document.getElementById('final1Input').classList.add('highlighted');
+      filled++;
+
+
+    }
+    const finalEV = text.match(/Evasion Rating: (\d{1,4})/i);
+    if (finalEV) {
+      if (mode === 'EV_ES') {
+        document.getElementById('final1Input').value = finalEV[1];
+        document.getElementById('final1Input').classList.add('highlighted');
+      } else if (mode === 'AR_EV') {
+        document.getElementById('final2Input').value = finalEV[1];
+        document.getElementById('final2Input').classList.add('highlighted');
+      }
+      filled++;
+    }
+    const finalES = text.match(/Energy Shield: (\d{1,4})/i);
+    if (finalES) {
+      if (mode === 'EV_ES' || mode === 'AR_ES') {
+        document.getElementById('final2Input').value = finalES[1];
+        document.getElementById('final2Input').classList.add('highlighted');
+        filled++;
+      }
     }
 
-    function calculateStats() {
-      const baseES = parseFloat(document.getElementById("baseES").value) || 0;
-      const flatES = parseFloat(document.getElementById("flatES").value) || 0;
-      const baseEV = parseFloat(document.getElementById("baseEV").value) || 0;
-      const flatEV = parseFloat(document.getElementById("flatEV").value) || 0;
-
-      const increased = parseFloat(document.getElementById("increased").value) || 0;
-      const rune1 = parseFloat(document.getElementById("rune1").value) || 0;
-      const rune2 = parseFloat(document.getElementById("rune2").value) || 0;
-      const quality = parseFloat(document.getElementById("quality").value) || 0;
-
-      const val1With = calculateStat(baseEV, flatEV, increased, rune1, rune2, quality, true);
-      const val1Without = calculateStat(baseEV, flatEV, increased, rune1, rune2, quality, false);
-
-      const val2With = calculateStat(baseES, flatES, increased, rune1, rune2, quality, true);
-      const val2Without = calculateStat(baseES, flatES, increased, rune1, rune2, quality, false);
-
-      document.getElementById("result").innerText =
-        `使用符文的${label1}：${val1With}\n使用符文的${label2}：${val2With}\n\n` +
-        `未使用符文的${label1}：${val1Without}\n未使用符文的${label2}：${val2Without}`;
+    const flatAR = text.match(/\+(\d+) to Armour/i);
+    if (flatAR) {
+      document.getElementById('flat1').value = flatAR[1];
+      document.getElementById('flat1Only').value = flatAR[1];
+      document.getElementById('flat1').classList.add('highlighted');
+      document.getElementById('flat1Only').classList.add('highlighted');
+      filled++;
+    }
+    const flatEV = text.match(/\+(\d+) to maximum Evasion Rating/i);
+    if (flatEV) {
+      const idFlat = (mode === 'EV_ES' ? 'flat1' : (mode === 'AR_EV' ? 'flat2' : null));
+      const idFlatOnly = (mode === 'EV_ES' ? 'flat1Only' : (mode === 'AR_EV' ? 'flat2Only' : null));
+      if (idFlat) {
+        document.getElementById(idFlat).value = flatEV[1];
+        document.getElementById(idFlatOnly).value = flatEV[1];
+        document.getElementById(idFlat).classList.add('highlighted');
+        document.getElementById(idFlatOnly).classList.add('highlighted');
+        filled++;
+      }
+    }
+    const flatES = text.match(/\+(\d+) to maximum Energy Shield/i);
+    if (flatES) {
+      const idFlat2 = (mode === 'EV_ES' || mode === 'AR_ES') ? 'flat2' : null;
+      const idFlat2Only = (mode === 'EV_ES' || mode === 'AR_ES') ? 'flat2Only' : null;
+      if (idFlat2) {
+        document.getElementById(idFlat2).value = flatES[1];
+        document.getElementById(idFlat2Only).value = flatES[1];
+        document.getElementById(idFlat2).classList.add('highlighted');
+        document.getElementById(idFlat2Only).classList.add('highlighted');
+        filled++;
+      }
     }
 
-    function reverseWithoutRunes() {
-      const finalES = parseFloat(document.getElementById("finalESInput").value) || 0;
-      const flatES = parseFloat(document.getElementById("flatESOnly").value) || 0;
-      const finalEV = parseFloat(document.getElementById("finalEVInput").value) || 0;
-      const flatEV = parseFloat(document.getElementById("flatEVOnly").value) || 0;
-
-      const inc = parseFloat(document.getElementById("increasedOnly").value) || 0;
-      const rune1 = parseFloat(document.getElementById("rune1Only").value) || 0;
-      const rune2 = parseFloat(document.getElementById("rune2Only").value) || 0;
-      const quality = parseFloat(document.getElementById("qualityOnly").value) || 0;
-
-      const totalIncWithRunes = inc + rune1 + rune2;
-      const multiplierWithRunes = (1 + totalIncWithRunes / 100) * (1 + quality / 100);
-      const multiplierWithoutRunes = (1 + inc / 100) * (1 + quality / 100);
-
-      const basePlusFlatES = finalES / multiplierWithRunes;
-      const basePlusFlatEV = finalEV / multiplierWithRunes;
-
-      const baseES = basePlusFlatES - flatES;
-      const baseEV = basePlusFlatEV - flatEV;
-
-      const estES = Math.round(basePlusFlatES * multiplierWithoutRunes);
-      const estEV = Math.round(basePlusFlatEV * multiplierWithoutRunes);
-
-      document.getElementById("reverseResult").innerText =
-        `未使用符文的${label1}（反推）：${estEV}\n` +
-        `未使用符文的${label2}（反推）：${estES}\n\n` +
-        `推估基底${label1}：${Math.round(baseEV)}\n` +
-        `推估基底${label2}：${Math.round(baseES)}`;
+    let increasedSum = 0;
+    const incRegex = /(\d+)% increased (Armour and Evasion|Armour and Energy Shield|Evasion and Energy Shield|Armour, Evasion and Energy Shield|Armour|Evasion|Energy Shield)/gi;
+    let m;
+    while ((m = incRegex.exec(text)) !== null) {
+      increasedSum += parseInt(m[1]);
+    }
+    if (increasedSum > 0) {
+      document.getElementById('increased').value = increasedSum;
+      document.getElementById('increasedOnly').value = increasedSum;
+      document.getElementById('increased').classList.add('highlighted');
+      document.getElementById('increasedOnly').classList.add('highlighted');
+      filled++;
     }
 
-    window.onload = updateLabels;
+    const runeMatch = /(\d+)% increased Armour, Evasion and Energy Shield/i.exec(text);
+    if (runeMatch) {
+      const runeVal = parseInt(runeMatch[1]) / 2;
+      ['rune1','rune2','rune1Only','rune2Only'].forEach(id => {
+        document.getElementById(id).value = runeVal;
+        document.getElementById(id).classList.add('highlighted');
+      });
+      filled += 2;
+    }
+
+    const qualityMatch = /Quality: \+?(\d{1,2})%/i.exec(text);
+    if (qualityMatch) {
+      document.getElementById('quality').value = qualityMatch[1];
+      document.getElementById('qualityOnly').value = qualityMatch[1];
+      document.getElementById('quality').classList.add('highlighted');
+      document.getElementById('qualityOnly').classList.add('highlighted');
+      filled++;
+    }
+
+    status.className = filled > 0 ? 'success' : 'fail';
+    status.innerText = filled > 0 ? `成功填入欄位：${filled}` : '未成功填入欄位';
+  }
+
+function toggleOCRDisplay() {
+  const checkbox = document.getElementById('toggleOCRText');
+  const ocrTextDiv = document.getElementById('ocrTextDisplay');
+  if (checkbox.checked) {
+    ocrTextDiv.style.display = 'block';
+  } else {
+    ocrTextDiv.style.display = 'none';
+  }
+}
+
   </script>
 </body>
 </html>

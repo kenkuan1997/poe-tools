@@ -1,0 +1,68 @@
+BaseType=Sleek Jacket  Evasion Rating=268  Energy Shield=101
+BaseType=Sun Leather  Evasion Rating=50  Energy Shield=12
+BaseType=Umbra Armour  Evasion Rating=362  Energy Shield=72
+BaseType=Saintly Chainmail  Armour=220  Energy Shield=128
+BaseType=Crypt Armour  Armour=113  Energy Shield=22
+BaseType=Blood Raiment  Evasion Rating=206  Energy Shield=62
+BaseType=Zealot Plate  Armour=206  Energy Shield=62
+BaseType=Chainmail Vest  Armour=22  Energy Shield=6
+BaseType=Full Ringmail  Armour=148  Energy Shield=37
+BaseType=Ringmail Coat  Armour=60  Energy Shield=14
+BaseType=Mesh Plate  Armour=101  Energy Shield=25
+BaseType=Saint's Hauberk  Armour=396  Energy Shield=95
+BaseType=Holy Chainmail  Armour=314  Energy Shield=73
+BaseType=Full Chainmail  Armour=226  Energy Shield=53
+BaseType=Crusader Chainmail  Armour=507  Energy Shield=121
+BaseType=Vestal Coat  Evasion Rating=130  Energy Shield=30
+BaseType=Silken Garb  Evasion Rating=268  Energy Shield=87
+BaseType=Zodiac Leather  Evasion Rating=334  Energy Shield=112
+BaseType=Exquisite Garb  Evasion Rating=420  Energy Shield=130
+BaseType=Scale Vest  Armour=22  Evasion Rating=22
+BaseType=Brigandine  Armour=47  Evasion Rating=38
+BaseType=Coat of Plates  Armour=76  Evasion Rating=57
+BaseType=Full Scale Armour  Armour=132  Evasion Rating=101
+BaseType=Field Lamellar  Armour=180  Evasion Rating=120
+BaseType=Arena Plate  Armour=230  Evasion Rating=150
+BaseType=Glory Plate  Armour=308  Evasion Rating=198
+BaseType=Glorious Plate  Armour=440  Evasion Rating=293
+BaseType=Majestic Lamellar  Armour=552  Evasion Rating=362
+BaseType=Triumphant Lamellar  Armour=695  Evasion Rating=420
+BaseType=Tattered Robe  Energy Shield=28
+BaseType=Feathered Robe  Energy Shield=35
+BaseType=Hexer's Robe  Energy Shield=44
+BaseType=Bone Raiment  Energy Shield=52
+BaseType=Silk Robe  Energy Shield=61
+BaseType=Keth Raiment  Energy Shield=70
+BaseType=Votive Raiment  Energy Shield=78
+BaseType=Altar Robe  Energy Shield=89
+BaseType=Elementalist Robe  Energy Shield=97
+BaseType=Mystic Raiment  Energy Shield=100
+BaseType=Imperial Robe  Energy Shield=108
+BaseType=Plated Raiment  Energy Shield=117
+BaseType=Enlightened Robe  Energy Shield=153
+BaseType=Vile Robe  Energy Shield=184
+BaseType=Plate Vest  Armour=22
+BaseType=Chestplate  Armour=47
+BaseType=Ornate Plate  Armour=118
+BaseType=Field Plate  Armour=158
+BaseType=Royal Plate  Armour=266
+BaseType=Majestic Plate  Armour=358
+BaseType=Crusader Plate  Armour=552
+BaseType=Astral Plate  Armour=711
+BaseType=Colossal Plate  Armour=943
+BaseType=Magistrate Plate  Armour=1104
+BaseType=Grand Armour  Armour=1306
+BaseType=Valiant Plate  Armour=1508
+BaseType=Victorious Plate  Armour=1670
+BaseType=Shirt  Evasion Rating=13
+BaseType=Jerkin  Evasion Rating=38
+BaseType=Light Brigandine  Evasion Rating=57
+BaseType=Hunting Leather  Evasion Rating=82
+BaseType=Frontier Leathers  Evasion Rating=134
+BaseType=Sharkskin Tunic  Evasion Rating=191
+BaseType=Solar Leather  Evasion Rating=234
+BaseType=Sleek Coat  Evasion Rating=293
+BaseType=Glorious Leather  Evasion Rating=384
+BaseType=Wyrmscale Jacket  Evasion Rating=483
+BaseType=Hydrascale Coat  Evasion Rating=572
+BaseType=Dragonscale Raiment  Evasion Rating=645

@@ -44,6 +44,16 @@
   </label>
   <div id="recognitionStatus"></div>
 
+
+<div>
+  <label><input type="checkbox" id="toggleOCRText" onchange="toggleOCRDisplay()"> 顯示OCR辨識文字</label>
+</div>
+<div id="ocrTextDisplay" style="display:none; margin-top:10px;">
+  <textarea id="ocrTextArea" rows="10" cols="50" readonly style="width:100%;"></textarea>
+</div>
+
+
+
   <div class="baseRow">
     <label>基底名稱（預設 Vile Robe）：
       <input type="text" id="baseName" value="Vile Robe" oninput="updateBaseFromName()">
@@ -197,6 +207,10 @@
     const { data: { text } } = await worker.recognize(file);
     await worker.terminate();
 
+    console.log(text);  // 輸出OCR結果
+    document.getElementById('ocrTextArea').value = text;
+
+
     let filled = 0;
 
     const finalMatches = [...text.matchAll(/Energy Shield: (\d{2,4})/gi)];
@@ -247,6 +261,16 @@
     status.className = filled > 0 ? 'success' : 'fail';
     status.innerText = filled > 0 ? `成功填入欄位：${filled}` : '未成功填入欄位';
   }
+
+function toggleOCRDisplay() {
+  const checkbox = document.getElementById('toggleOCRText');
+  const ocrTextDiv = document.getElementById('ocrTextDisplay');
+  if (checkbox.checked) {
+    ocrTextDiv.style.display = 'block';
+  } else {
+    ocrTextDiv.style.display = 'none';
+  }
+}
 </script>
 
 </body>
